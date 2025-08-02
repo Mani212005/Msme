@@ -1,3 +1,6 @@
+![Image_Alt](https://github.com/Mani212005/Msme/blob/030c328166903f21de3e10af65901c654a3b761a/Screenshot%202025-08-02%20163920.jpg)
+
+
 # AI Logistics Platform for MSMEs
 
 This project is a Streamlit-based web application designed to serve as a prototype for an AI-powered logistics platform for Micro, Small, and Medium Enterprises (MSMEs). The platform offers a suite of tools for order management, delivery partner coordination, and real-time route optimization, aiming to streamline and enhance logistics operations for small businesses.
@@ -26,8 +29,8 @@ To get started with the AI Logistics Platform, follow these steps:
 3. **Run the Streamlit application**:
    ```bash
    streamlit run logistics_prototype/app.py
-   ```
-
+    ```
+![Image_Alt](https://github.com/Mani212005/Msme/blob/030c328166903f21de3e10af65901c654a3b761a/Screenshot%202025-08-02%20163950.jpg)
 ## Usage
 
 - **Creating a Shipment**: Navigate to the "Create New Shipment" form, enter the pickup and delivery addresses, and click "Create Shipment."
