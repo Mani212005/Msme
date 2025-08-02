@@ -1,0 +1,149 @@
+
+/* General Body Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Main Container */
+.main {
+    padding: 2rem;
+}
+
+/* Title */
+h1 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #1c1c1e;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Headers */
+h2, h3 {
+    font-weight: 500;
+    color: #3c3c3e;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+    margin-top: 2rem;
+}
+
+/* Buttons */
+.stButton>button {
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stButton>button:hover {
+    background-color: #005ecb;
+    transform: translateY(-2px);
+}
+
+.stButton>button:active {
+    background-color: #004aad;
+    transform: translateY(0);
+}
+
+/* Text Inputs */
+.stTextInput>div>div>input {
+    border-radius: 8px;
+    border: 1px solid #d1d1d6;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.stTextInput>div>div>input:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
+}
+
+/* DataFrames */
+.stDataFrame {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    justify-content: center;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.stTabs [data-baseweb="tab"] {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #6c6c70;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 2px solid transparent;
+    transition: color 0.3s, border-bottom-color 0.3s;
+}
+
+.stTabs [data-baseweb="tab--selected"] {
+    color: #007aff;
+    border-bottom-color: #007aff;
+}
+
+/* Expander */
+.stExpander {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stExpander header {
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 1rem;
+}
+
+/* File Uploader */
+.stFileUploader {
+    border: 2px dashed #007aff;
+    border-radius: 12px;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    text-align: center;
+}
+
+.stFileUploader label {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #007aff;
+}
+
+/* Custom Layouts */
+.form-container {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.dashboard-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.dashboard-column {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}

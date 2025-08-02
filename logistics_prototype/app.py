@@ -10,6 +10,14 @@ DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'or
 
 st.set_page_config(layout="wide")
 
+# Load custom CSS
+def load_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+css_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'style.css')
+load_css(css_file_path)
+
 st.title("AI Logistics Platform for MSMEs")
 
 # Initialize session state for orders_df
@@ -47,204 +55,213 @@ if ids_changed:
 # MSME Dashboard
 st.header("MSME Dashboard")
 
-# Load Sample Data Button
-SAMPLE_DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'sample_dataset.csv')
-if st.button("Load Sample Data"):
-    try:
-        sample_df = pd.read_csv(SAMPLE_DATA_FILE)
-        # Clean up column names (strip whitespace and convert to lowercase)
-        sample_df.columns = sample_df.columns.str.strip().str.lower()
+# --- Layout for Data Loading and Creation ---
+col1, col2 = st.columns(2)
 
-        pickup_col = 'pickupaddress'
-        delivery_col = 'deliveryaddress'
+with col1:
+    with st.container():
+        st.subheader("Quick Actions")
+        # Load Sample Data Button
+        SAMPLE_DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'sample_dataset.csv')
+        if st.button("Load Sample Data"):
+            try:
+                sample_df = pd.read_csv(SAMPLE_DATA_FILE)
+                # Clean up column names (strip whitespace and convert to lowercase)
+                sample_df.columns = sample_df.columns.str.strip().str.lower()
 
-        if pickup_col in sample_df.columns and delivery_col in sample_df.columns:
-            processed_orders = 0
-            failed_addresses = []
-            for index, row in sample_df.iterrows():
-                pickup_address_str = row[pickup_col]
-                delivery_address_str = row[delivery_col]
+                pickup_col = 'pickupaddress'
+                delivery_col = 'deliveryaddress'
 
-                lat_pick, lon_pick, lat_drop, lon_drop = None, None, None, None
+                if pickup_col in sample_df.columns and delivery_col in sample_df.columns:
+                    processed_orders = 0
+                    failed_addresses = []
+                    for index, row in sample_df.iterrows():
+                        pickup_address_str = row[pickup_col]
+                        delivery_address_str = row[delivery_col]
 
-                # Try to get coordinates from CSV first
-                if 'lat_pick' in sample_df.columns and 'lon_pick' in sample_df.columns and \
-                   pd.notna(row.get('lat_pick')) and pd.notna(row.get('lon_pick')):
-                    lat_pick = float(row['lat_pick'])
-                    lon_pick = float(row['lon_pick'])
-                
-                if 'lat_drop' in sample_df.columns and 'lon_drop' in sample_df.columns and \
-                   pd.notna(row.get('lat_drop')) and pd.notna(row.get('lon_drop')):
-                    lat_drop = float(row['lat_drop'])
-                    lon_drop = float(row['lon_drop'])
+                        lat_pick, lon_pick, lat_drop, lon_drop = None, None, None, None
 
-                # If coordinates not provided in CSV, try geocoding
-                if lat_pick is None or lon_pick is None:
-                    temp_pickup_address = pickup_address_str + ", Delhi, India"
-                    lat_pick, lon_pick = get_lat_lon(temp_pickup_address)
-                    if lat_pick is None:
-                        failed_addresses.append(pickup_address_str)
-                        continue
+                        # Try to get coordinates from CSV first
+                        if 'lat_pick' in sample_df.columns and 'lon_pick' in sample_df.columns and \
+                           pd.notna(row.get('lat_pick')) and pd.notna(row.get('lon_pick')):
+                            lat_pick = float(row['lat_pick'])
+                            lon_pick = float(row['lon_pick'])
+                        
+                        if 'lat_drop' in sample_df.columns and 'lon_drop' in sample_df.columns and \
+                           pd.notna(row.get('lat_drop')) and pd.notna(row.get('lon_drop')):
+                            lat_drop = float(row['lat_drop'])
+                            lon_drop = float(row['lon_drop'])
 
-                if lat_drop is None or lon_drop is None:
-                    temp_delivery_address = delivery_address_str + ", Delhi, India"
-                    lat_drop, lon_drop = get_lat_lon(temp_delivery_address)
-                    if lat_drop is None:
-                        failed_addresses.append(delivery_address_str)
-                        continue
+                        # If coordinates not provided in CSV, try geocoding
+                        if lat_pick is None or lon_pick is None:
+                            temp_pickup_address = pickup_address_str + ", Delhi, India"
+                            lat_pick, lon_pick = get_lat_lon(temp_pickup_address)
+                            if lat_pick is None:
+                                failed_addresses.append(pickup_address_str)
+                                continue
 
-                distance = haversine_distance(lat_pick, lon_pick, lat_drop, lon_drop)
-                eta = get_estimated_delivery_time(distance)
-                new_order = pd.DataFrame([{\
-                    'id': str(uuid.uuid4()),
-                    'pickup_address': pickup_address_str,
-                    'delivery_address': delivery_address_str,
-                    'assigned_to': 'N/A',
-                    'status': 'Pending',
-                    'lat_pick': lat_pick,
-                    'lon_pick': lon_pick,
-                    'lat_drop': lat_drop,
-                    'lon_drop': lon_drop,
-                    'eta': eta
-                }])
-                st.session_state.orders_df = pd.concat([st.session_state.orders_df, new_order], ignore_index=True)
-                processed_orders += 1
-            
-            if processed_orders > 0:
-                st.session_state.orders_df.to_csv(DATA_FILE, index=False)
-                st.success(f"Successfully processed {processed_orders} new orders from sample data!")
-                st.rerun()
+                        if lat_drop is None or lon_drop is None:
+                            temp_delivery_address = delivery_address_str + ", Delhi, India"
+                            lat_drop, lon_drop = get_lat_lon(temp_delivery_address)
+                            if lat_drop is None:
+                                failed_addresses.append(delivery_address_str)
+                                continue
 
-            if failed_addresses:
-                st.warning("The following addresses from sample data could not be found via geocoding and were skipped:")
-                for address in set(failed_addresses):
-                    st.write(f"- {address}")
+                        distance = haversine_distance(lat_pick, lon_pick, lat_drop, lon_drop)
+                        eta = get_estimated_delivery_time(distance)
+                        new_order = pd.DataFrame([{\
+                            'id': str(uuid.uuid4()),
+                            'pickup_address': pickup_address_str,
+                            'delivery_address': delivery_address_str,
+                            'assigned_to': 'N/A',
+                            'status': 'Pending',
+                            'lat_pick': lat_pick,
+                            'lon_pick': lon_pick,
+                            'lat_drop': lat_drop,
+                            'lon_drop': lon_drop,
+                            'eta': eta
+                        }])
+                        st.session_state.orders_df = pd.concat([st.session_state.orders_df, new_order], ignore_index=True)
+                        processed_orders += 1
+                    
+                    if processed_orders > 0:
+                        st.session_state.orders_df.to_csv(DATA_FILE, index=False)
+                        st.success(f"Successfully processed {processed_orders} new orders from sample data!")
+                        st.rerun()
 
-        else:
-            st.error("The sample data CSV must have 'pickupaddress' and 'deliveryaddress' columns. Optionally, you can include 'lat_pick', 'lon_pick', 'lat_drop', 'lon_drop' for direct coordinate input.")
-    except Exception as e:
-        st.error(f"An error occurred while loading sample data: {e}")
+                    if failed_addresses:
+                        st.warning("The following addresses from sample data could not be found via geocoding and were skipped:")
+                        for address in set(failed_addresses):
+                            st.write(f"- {address}")
 
-# Bulk upload
-st.subheader("Upload a CSV with multiple orders")
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-if uploaded_file is not None:
-    try:
-        new_orders_df = pd.read_csv(uploaded_file)
-        # Clean up column names (strip whitespace and convert to lowercase)
-        new_orders_df.columns = new_orders_df.columns.str.strip().str.lower()
+                else:
+                    st.error("The sample data CSV must have 'pickupaddress' and 'deliveryaddress' columns. Optionally, you can include 'lat_pick', 'lon_pick', 'lat_drop', 'lon_drop' for direct coordinate input.")
+            except Exception as e:
+                st.error(f"An error occurred while loading sample data: {e}")
 
-        # Use the correct column names from the user's CSV
-        pickup_col = 'pickupaddress'
-        delivery_col = 'deliveryaddress'
+        # Bulk upload
+        st.subheader("Upload a CSV with multiple orders")
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        if uploaded_file is not None:
+            try:
+                new_orders_df = pd.read_csv(uploaded_file)
+                # Clean up column names (strip whitespace and convert to lowercase)
+                new_orders_df.columns = new_orders_df.columns.str.strip().str.lower()
 
-        if pickup_col in new_orders_df.columns and delivery_col in new_orders_df.columns:
-            processed_orders = 0
-            failed_addresses = []
-            for index, row in new_orders_df.iterrows():
-                pickup_address_str = row[pickup_col]
-                delivery_address_str = row[delivery_col]
+                # Use the correct column names from the user's CSV
+                pickup_col = 'pickupaddress'
+                delivery_col = 'deliveryaddress'
 
-                lat_pick, lon_pick, lat_drop, lon_drop = None, None, None, None
+                if pickup_col in new_orders_df.columns and delivery_col in new_orders_df.columns:
+                    processed_orders = 0
+                    failed_addresses = []
+                    for index, row in new_orders_df.iterrows():
+                        pickup_address_str = row[pickup_col]
+                        delivery_address_str = row[delivery_col]
 
-                # Try to get coordinates from CSV first
-                if 'lat_pick' in new_orders_df.columns and 'lon_pick' in new_orders_df.columns and \
-                   pd.notna(row.get('lat_pick')) and pd.notna(row.get('lon_pick')):
-                    lat_pick = float(row['lat_pick'])
-                    lon_pick = float(row['lon_pick'])
-                
-                if 'lat_drop' in new_orders_df.columns and 'lon_drop' in new_orders_df.columns and \
-                   pd.notna(row.get('lat_drop')) and pd.notna(row.get('lon_drop')):
-                    lat_drop = float(row['lat_drop'])
-                    lon_drop = float(row['lon_drop'])
+                        lat_pick, lon_pick, lat_drop, lon_drop = None, None, None, None
 
-                # If coordinates not provided in CSV, try geocoding
-                if lat_pick is None or lon_pick is None:
-                    temp_pickup_address = pickup_address_str + ", Delhi, India"
-                    lat_pick, lon_pick = get_lat_lon(temp_pickup_address)
-                    if lat_pick is None:
-                        failed_addresses.append(pickup_address_str)
-                        continue
+                        # Try to get coordinates from CSV first
+                        if 'lat_pick' in new_orders_df.columns and 'lon_pick' in new_orders_df.columns and \
+                           pd.notna(row.get('lat_pick')) and pd.notna(row.get('lon_pick')):
+                            lat_pick = float(row['lat_pick'])
+                            lon_pick = float(row['lon_pick'])
+                        
+                        if 'lat_drop' in new_orders_df.columns and 'lon_drop' in new_orders_df.columns and \
+                           pd.notna(row.get('lat_drop')) and pd.notna(row.get('lon_drop')):
+                            lat_drop = float(row['lat_drop'])
+                            lon_drop = float(row['lon_drop'])
 
-                if lat_drop is None or lon_drop is None:
-                    temp_delivery_address = delivery_address_str + ", Delhi, India"
-                    lat_drop, lon_drop = get_lat_lon(temp_delivery_address)
-                    if lat_drop is None:
-                        failed_addresses.append(delivery_address_str)
-                        continue
+                        # If coordinates not provided in CSV, try geocoding
+                        if lat_pick is None or lon_pick is None:
+                            temp_pickup_address = pickup_address_str + ", Delhi, India"
+                            lat_pick, lon_pick = get_lat_lon(temp_pickup_address)
+                            if lat_pick is None:
+                                failed_addresses.append(pickup_address_str)
+                                continue
 
-                distance = haversine_distance(lat_pick, lon_pick, lat_drop, lon_drop)
-                eta = get_estimated_delivery_time(distance)
-                new_order = pd.DataFrame([{
-                    'id': str(uuid.uuid4()),
-                    'pickup_address': pickup_address_str,
-                    'delivery_address': delivery_address_str,
-                    'assigned_to': 'N/A',
-                    'status': 'Pending',
-                    'lat_pick': lat_pick,
-                    'lon_pick': lon_pick,
-                    'lat_drop': lat_drop,
-                    'lon_drop': lon_drop,
-                    'eta': eta
-                }])
-                st.session_state.orders_df = pd.concat([st.session_state.orders_df, new_order], ignore_index=True)
-                processed_orders += 1
-            
-            if processed_orders > 0:
-                st.session_state.orders_df.to_csv(DATA_FILE, index=False)
-                st.success(f"Successfully processed {processed_orders} new orders!")
+                        if lat_drop is None or lon_drop is None:
+                            temp_delivery_address = delivery_address_str + ", Delhi, India"
+                            lat_drop, lon_drop = get_lat_lon(temp_delivery_address)
+                            if lat_drop is None:
+                                failed_addresses.append(delivery_address_str)
+                                continue
 
-            if failed_addresses:
-                st.warning("The following addresses could not be found via geocoding and were skipped. Consider adding 'lat_pick', 'lon_pick', 'lat_drop', 'lon_drop' columns to your CSV for these entries:")
-                for address in set(failed_addresses):
-                    st.write(f"- {address}")
+                        distance = haversine_distance(lat_pick, lon_pick, lat_drop, lon_drop)
+                        eta = get_estimated_delivery_time(distance)
+                        new_order = pd.DataFrame([{
+                            'id': str(uuid.uuid4()),
+                            'pickup_address': pickup_address_str,
+                            'delivery_address': delivery_address_str,
+                            'assigned_to': 'N/A',
+                            'status': 'Pending',
+                            'lat_pick': lat_pick,
+                            'lon_pick': lon_pick,
+                            'lat_drop': lat_drop,
+                            'lon_drop': lon_drop,
+                            'eta': eta
+                        }])
+                        st.session_state.orders_df = pd.concat([st.session_state.orders_df, new_order], ignore_index=True)
+                        processed_orders += 1
+                    
+                    if processed_orders > 0:
+                        st.session_state.orders_df.to_csv(DATA_FILE, index=False)
+                        st.success(f"Successfully processed {processed_orders} new orders!")
 
-        else:
-            st.error("The uploaded CSV must have 'pickupaddress' and 'deliveryaddress' columns. Optionally, you can include 'lat_pick', 'lon_pick', 'lat_drop', 'lon_drop' for direct coordinate input.")
-    except Exception as e:
-        st.error(f"An error occurred while processing the file: {e}")
+                    if failed_addresses:
+                        st.warning("The following addresses could not be found via geocoding and were skipped. Consider adding 'lat_pick', 'lon_pick', 'lat_drop', 'lon_drop' columns to your CSV for these entries:")
+                        for address in set(failed_addresses):
+                            st.write(f"- {address}")
 
-with st.form("new_shipment_form"):
-    st.subheader("Create New Shipment")
-    pickup_address = st.text_input("Pickup Address")
-    delivery_address = st.text_input("Delivery Address")
-    submitted = st.form_submit_button("Create Shipment")
+                else:
+                    st.error("The uploaded CSV must have 'pickupaddress' and 'deliveryaddress' columns. Optionally, you can include 'lat_pick', 'lon_pick', 'lat_drop', 'lon_drop' for direct coordinate input.")
+            except Exception as e:
+                st.error(f"An error occurred while processing the file: {e}")
 
-    if submitted:
-        if pickup_address and delivery_address:
-            lat_pick, lon_pick = get_lat_lon(pickup_address)
-            lat_drop, lon_drop = get_lat_lon(delivery_address)
-            if lat_pick is not None:
-                new_order = pd.DataFrame([{
-                    'id': str(uuid.uuid4()),
-                    'pickup_address': pickup_address,
-                    'delivery_address': delivery_address,
-                    'assigned_to': 'N/A',
-                    'status': 'Pending',
-                    'lat_pick': lat_pick,
-                    'lon_pick': lon_pick,
-                    'lat_drop': lat_drop,
-                    'lon_drop': lon_drop
-                }])
-                distance = haversine_distance(lat_pick, lon_pick, lat_drop, lon_drop)
-                eta = get_estimated_delivery_time(distance)
-                new_order['eta'] = eta
-                st.session_state.orders_df = pd.concat([st.session_state.orders_df, new_order], ignore_index=True)
-                st.session_state.orders_df.to_csv(DATA_FILE, index=False)
-                st.success("Shipment created successfully!")
-                st.info(f"Estimated delivery time: {eta}")
-            else:
-                st.error("Could not geocode the address. Please check and try again.")
-        else:
-            st.error("Please provide both pickup and delivery addresses.")
+with col2:
+    with st.container():
+        st.subheader("Create New Shipment")
+        with st.form("new_shipment_form"):
+            pickup_address = st.text_input("Pickup Address")
+            delivery_address = st.text_input("Delivery Address")
+            submitted = st.form_submit_button("Create Shipment")
 
+            if submitted:
+                if pickup_address and delivery_address:
+                    lat_pick, lon_pick = get_lat_lon(pickup_address)
+                    lat_drop, lon_drop = get_lat_lon(delivery_address)
+                    if lat_pick is not None:
+                        new_order = pd.DataFrame([{
+                            'id': str(uuid.uuid4()),
+                            'pickup_address': pickup_address,
+                            'delivery_address': delivery_address,
+                            'assigned_to': 'N/A',
+                            'status': 'Pending',
+                            'lat_pick': lat_pick,
+                            'lon_pick': lon_pick,
+                            'lat_drop': lat_drop,
+                            'lon_drop': lon_drop
+                        }])
+                        distance = haversine_distance(lat_pick, lon_pick, lat_drop, lon_drop)
+                        eta = get_estimated_delivery_time(distance)
+                        new_order['eta'] = eta
+                        st.session_state.orders_df = pd.concat([st.session_state.orders_df, new_order], ignore_index=True)
+                        st.session_state.orders_df.to_csv(DATA_FILE, index=False)
+                        st.success("Shipment created successfully!")
+                        st.info(f"Estimated delivery time: {eta}")
+                    else:
+                        st.error("Could not geocode the address. Please check and try again.")
+                else:
+                    st.error("Please provide both pickup and delivery addresses.")
 
-# Delivery Partner Interface
+# --- Tabs for Dashboard and Delivery Partner View ---
 tabs = st.tabs(["MSME Dashboard", "Delivery Partner View"])
 
 with tabs[0]:
+    st.header("Shipment Overview")
     st.dataframe(st.session_state.orders_df)
 
+    st.subheader("Manage Shipments")
     for index, order in st.session_state.orders_df.iterrows():
         with st.expander(f"Order {order['id']}"):
             st.write(f"**Pickup:** {order['pickup_address']}")
@@ -261,7 +278,7 @@ with tabs[0]:
                 st.session_state.orders_df.to_csv(DATA_FILE, index=False)
                 st.success(f"Order {order['id']} assigned to {selected_partner}")
 
-
+    st.header("Route Optimization & Automation")
     if st.button("Optimize Routes"):
         pending_orders = st.session_state.orders_df[st.session_state.orders_df['status'] == 'Pending']
         if not pending_orders.empty:
