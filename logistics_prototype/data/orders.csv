@@ -1,0 +1,6 @@
+id,pickup_address,delivery_address,assigned_to,status,lat_pick,lon_pick,lat_drop,lon_drop,eta
+4f753d0a-a956-4ccd-b197-b3fc1348cbdb,Connaught Place, New Delhi,Partner A,Picked Up,28.6314,77.2167,28.6129,77.2295,1 day
+b978d9cb-abb6-4a34-bb60-f15ac9b56dac,India Gate, New Delhi,Partner B,Pending,28.6129,77.2295,28.6562,77.241,1 day
+83bc51b2-6f4b-449d-a4fb-6f77bce8f5e2,Red Fort, Delhi,Partner C,Pending,28.6562,77.241,28.5245,77.1855,1 day
+04514647-b618-401d-93f4-1e7a408b0cc7,Qutub Minar, New Delhi,Partner A,Picked Up,28.5245,77.1855,28.6314,77.2167,1 day
+8fcffac3-5ba0-4047-938a-dfd7a8fdc6bc,Humayun's Tomb, New Delhi,Partner B,Pending,28.5933,77.2507,28.6129,77.2295,1 day
